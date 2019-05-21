@@ -1,0 +1,97 @@
+特征
+普罗米修斯的主要特点是：
+
+具有由度量名称和键/值对标识的时间序列数据的多维数据模型
+PromQL，一种灵活的查询语言， 可以利用这一维度
+不依赖分布式存储; 单个服务器节点是自治的
+时间序列集合通过HTTP上的拉模型发生
+推送时间序列通过中间网关支持
+通过服务发现或静态配置发现目标
+多种图形和仪表板支持模式
+
+组件
+Prometheus生态系统由多个组件组成，其中许多组件是可选的：
+主要的Prometheus服务器，用于存储时间序列数据
+用于检测应用程序代码的客户端库
+用于支持短期工作的推送网关
+针对HAProxy，StatsD，Graphite等服务的专用出口商
+一个alertmanager处理警报
+各种支持工具
+大多数Prometheus组件都是用Go编写的，因此很容易构建和部署为静态二进制文件。
+
+
+
+Software Download:    https://prometheus.io/download/
+
+tar -zxvf  prometheus-2.8.0.linux-amd64.tar.gz -C /usr/local 
+cd /usr/local && mv prometheus-2.8.0  prometheus
+
+
+vim /usr/local/prometheus/prometheus.yml
+
+
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+    # metrics_path defaults to '/metrics'
+    # scheme defaults to 'http'.
+
+    static_configs:
+    - targets: ['localhost:9090']              TSDB 数据库默认配置
+
+  - job_name: 'hnxj_Monitor'               #新增监控job_name
+    static_configs:
+    - targets: ['localhost:9100']
+ 
+  - job_name: 'tomcat1'                   #新增监控job_name     
+    static_configs:
+    - targets: ['172.27.48.185:9100']
+    
+    
+    
+    
+ Prometheus startup :
+    
+[root@zafax-zabbix-server ~]# cat /usr/lib/systemd/system/prometheus.service 
+[Unit]
+Description=Prometheus
+Documentation=https://prometheus.io/
+After=network.target
+
+[Service]
+# Type设置为notify时，服务会不断重启
+Type=simple
+User=root
+# --storage.tsdb.path是可选项，默认数据目录在运行目录的./dada目录中
+ExecStart=/usr/local/prometheus/prometheus --config.file=/usr/local/prometheus/prometheus.yml --storage.tsdb.path=/var/lib/prometheus
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+查看prometheus status:
+
+http://prometheus_server:9090
+3）安装node_export 并通过nohup方式启动node_export服务
+【被监控节点不管server端还是client都要安装node_export】
+tar -zxvf node_exporter-0.17.0.linux-amd64.tar.gz
+cd node_exporter-0.17.0.linux-amd64  
+nohup ./node_exporter &
+
+
+4）安装grafana并启动服务
+wget https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-5.2.3-1.x86_64.rpm
+sudo yum localinstall grafana-5.2.3-1.x86_64.rpm
+systemctl start grafana-server.service
+
+访问Grafana  添加数据源：  ---> type=Prometheus
+http://prometheus_server:3000
+
+
+
+
+
+    
+    
