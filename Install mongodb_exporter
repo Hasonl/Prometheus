@@ -1,0 +1,57 @@
+
+
+If you want to use Dingtalk send monitor message,Please install Prometheus Server,Grafana and Dingtalk.
+
+
+1. Download mongodb_exporter and then change the name:
+
+   wget https://github.com/dcu/mongodb_exporter/releases/download/v1.0.0/mongodb_exporter-linux-amd64
+
+   mv mongodb_exporter-linux-amd64  mongodb_exporter
+
+2. Start mongodb_exporter services. 
+       
+       Just one node use shell : 
+       nohup ./mongodb_exporter -mongodb.uri mongodb://192.168.0.12:27017 >/dev/null 2>&1
+
+       Cluster Mode use shell : 
+       nohup ./mongodb_exporter -mongodb.uri mongodb://192.168.0.12:27017,192.168.0.13:27017,192.168.0.14:27017 >/dev/null 2>&1 &
+
+3.  Config mogodb.yml.
+
+    mkdri -p /usr/local/prometheus/database
+
+    vim /usr/local/prometheus/database/mongodb.yml
+
+- targets: ['192.168.0.12:9001']
+  labels:
+    location: xiaohai
+    group: mongodb-database
+    project: mongodb-1
+
+- targets: ['192.168.0.13:9001']
+  labels:
+    location: xiaohai
+    group: mongodb-database
+    project: mongodb-2
+
+- targets: ['192.168.0.14:9001']
+  labels:
+    location: xiaohai
+    group: mongodb-database
+    project: mongodb-3
+   
+4.   Config prometheus.yml.
+#Add the new job_name
+  - job_name: 'db-mongo'
+    file_sd_configs:
+    - files:
+      - ./database/mongodb.yml
+      refresh_interval: 10s
+
+5.   Restart prometheus service
+
+systemctl restart prometheus.service  
+systemctl status prometheus.service
+
+
